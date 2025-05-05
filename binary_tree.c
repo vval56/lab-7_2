@@ -1,115 +1,187 @@
 #include "binary_tree.h"
 
-void input_tree(QUEUE *queue) {
-    int i = 0;
-    char *line = NULL;
-    size_t len = 0;
+#define GREEN "\033[32m"
+#define RESET "\033[0m"
 
-    init_queue(queue);
+int init_tree(struct Tree *tree) {
+    tree->root = NULL;
+    tree->size = 0;
+    return 0;
+}
 
-    puts("Введите целые числа (пустая строчка для завершения)");
-    do {
-        int number = 0;
+struct Leaf *create_leaf(int value, struct Leaf *parent) {
+    struct Leaf *newLeaf = (struct Leaf *)malloc(sizeof(struct Leaf));
+    newLeaf->left = NULL;
+    newLeaf->right = NULL;
+    newLeaf->value = value;
+    newLeaf->parent = parent;
+    return newLeaf;
+}
 
-        printf("Значение №%d: ", i + 1);
-        
-        if (getline(&line, &len, stdin) == -1) {
-            puts("Ошибка ввода");
-            free(line);
-            return;
+int Insert(struct Tree *tree, int value) {
+    struct Leaf *currentLeaf = tree->root;
+    struct Leaf *parent = NULL;
+    int depth = 1;
+
+    if (currentLeaf == NULL) {
+        tree->root = create_leaf(value, NULL);
+        tree->size = 1;
+        return 0;
+    }
+
+    while (currentLeaf != NULL) {
+        parent = currentLeaf;
+        if (value <= currentLeaf->value) {
+            currentLeaf = currentLeaf->left;
+        } else {
+            currentLeaf = currentLeaf->right;
         }
+        depth++;
+    }
 
-        if (empty_line(line)) {
-            if (i == 0) {
-                puts("Очередь пуста, введите пожалуйста значение");
-                continue;
-            }
+    struct Leaf *newLeaf = create_leaf(value, parent);
+    if (value <= parent->value) {
+        parent->left = newLeaf;
+    } else {
+        parent->right = newLeaf;
+    }
+
+    if (depth > tree->size) {
+        tree->size = depth;
+    }
+
+    return 1;
+}
+
+void print_tree(struct Leaf* node, int level) {
+    if (node == NULL) return;
+
+    // Правая ветвь (выше)
+    print_tree(node->right, level + 1);
+
+    // Отступы
+    for (int i = 0; i < level; i++) {
+        printf("  ");
+    }
+    
+    // Ветвь
+    if (level > 0) {
+        printf(node == node->parent->right ? "/" : "\\");
+    }
+    
+    // Значение
+    printf("%d\n", node->value);
+
+    // Левая ветвь (ниже)
+    print_tree(node->left, level + 1);
+}
+
+void visualize_tree(struct Tree* tree) {
+    if (tree->root == NULL) {
+        printf("(empty)\n");
+        return;
+    }
+    print_tree(tree->root, 0);
+}
+
+int input_tree(struct Tree *tree) {
+    while (1) {
+        tak_nado();
+        int new_value = new_input_metod(INT_MIN + 1, INT_MAX);
+
+        if (new_value == INT_MIN) {
             break;
+        } else {
+            Insert(tree, new_value);
         }
-
-        if (check_int(&number, line)) {
-            add_element_queue(queue, number);
-            i++;
-        }
-
-    } while (1);
-
-    free(line);
-    queue->size = i;
+    }
+    return 0;
 }
 
-int find_and_remove_min(QUEUE *queue) {
-    if (queue == NULL || queue->top == NULL) {
-        return -1;
-    }
-
-    Node *current = queue->top;
-    Node *min_node = current;
-    int min = current->data;
-
-    while (current != NULL) {
-        if (current->data < min) {
-            min = current->data;
-            min_node = current;
-        }
-        current = current->next;
-    }
-
-    int temp = queue->top->data;
-    queue->top->data = min_node->data;
-    min_node->data = temp;
-
-    return delete_element_queue(queue);
-}
-
-NODE_TREE *create_node_tree(int value) {
-    NODE_TREE *new_node = (NODE_TREE*)malloc(sizeof(NODE_TREE));
-    if (new_node == NULL) {
-        return NULL;
-    }
-    new_node->data = value;
-    new_node->left = new_node->right = NULL;
-    return new_node;
-}
-
-NODE_TREE *insert_node_tree(NODE_TREE *tree, int value) {
-    if (tree == NULL) {
-        return create_node_tree(value);
-    }
-
-    if (value < tree->data) {
-        tree->left = insert_node_tree(tree->left, value);
-    } else if (value > tree->data) {
-        tree->right = insert_node_tree(tree->right, value);
-    }
-
-    return tree;
-}
-
-void create_tree(NODE_TREE **tree, QUEUE *queue) {
-    input_tree(queue);
-
-    if (queue->size < 1) {
-        puts("Слишком мало введенных данных");
+void print_tree_with_highlight(struct Leaf *node, const char *prefix, int is_left, struct Leaf *highlight) {
+    if (node == NULL) {
+        printf("(Empty tree)\n");
         return;
     }
 
-    while (!is_empty_queue(queue)) {
-        *tree = insert_node_tree(*tree, find_and_remove_min(queue));
+    if (node->right) {
+        char new_prefix[1000];
+        snprintf(new_prefix, sizeof(new_prefix), "%s%s", prefix, is_left ? "│   " : "    ");
+        print_tree_with_highlight(node->right, new_prefix, 0, highlight);
+    }
+
+    if (node == highlight) {
+        printf("%s%s" GREEN "%d" RESET "\n", prefix, is_left ? "\\ " : "/", node->value);
+    } else {
+        printf("%s%s%d\n", prefix, is_left ? "\\" : "/ ", node->value);
+    }
+
+    if (node->left) {
+        char new_prefix[1000];
+        snprintf(new_prefix, sizeof(new_prefix), "%s%s", prefix, is_left ? "    " : "│   ");
+        print_tree_with_highlight(node->left, new_prefix, 1, highlight);
     }
 }
 
-void delete_tree(NODE_TREE *tree) {
-    if (tree != NULL) {
-        delete_tree(tree->left);
-        delete_tree(tree->right);
-        free(tree);
+struct Leaf *navigate_tree(struct Leaf *root) {
+    if (root == NULL) return NULL;
+
+    struct Leaf *current = root;
+    int ch;
+
+    while (1) {
+        system("clear");
+        print_tree_with_highlight(root, "", 0, current);
+
+        ch = my_getch();
+
+        if (ch == 'l' && current->left) {
+            current = current->left;
+        } else if (ch == 'r' && current->right) {
+            current = current->right;
+        } else if (ch == 'u' && current->parent) {
+            current = current->parent;
+        } else if (ch == 27) { 
+            return NULL;
+        } else if (ch == '\n') { 
+            return current;
+        }
     }
 }
 
-int tree_height(NODE_TREE* node) {
-    if (node == NULL) return 0;
-    int left_height = tree_height(node->left);
-    int right_height = tree_height(node->right);
-    return (left_height > right_height) ? left_height + 1 : right_height + 1;
+void RecDel(struct Leaf *node) {
+    if (node == NULL) return;
+
+    RecDel(node->left);
+    RecDel(node->right);
+
+    if (node->parent == NULL) {
+        node = NULL;
+        return;
+    }
+    if (node == node->parent->left) {
+        node->parent->left = NULL;
+    }
+    if (node == node->parent->right) {
+        node->parent->right = NULL;
+    }
+    free(node);
+}
+
+int delete_leaf(struct Tree *tree) {
+    struct Leaf *curr = navigate_tree(tree->root);
+
+    if (curr == NULL) {
+        return -1;
+    }
+
+    if (curr == tree->root) {
+        RecDel(curr->left);
+        RecDel(curr->right);
+        tree->root = NULL;
+        return 1;
+    }
+
+    RecDel(curr);
+    return 0;
 }

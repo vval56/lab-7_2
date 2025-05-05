@@ -7,9 +7,9 @@
             "args": [
                 "-g",
                     "${workspaceFolder}/main.c",
-                    "${workspaceFolder}/queue.c",
                     "${workspaceFolder}/binary_tree.c",
                     "${workspaceFolder}/find_top.c",
+                    "${workspaceFolder}/header.c",
                     "-o",
                     "${workspaceFolder}/main"
             ],

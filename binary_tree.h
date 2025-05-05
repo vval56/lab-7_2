@@ -1,26 +1,34 @@
 #ifndef BINARY_TREE_H
 #define BINARY_TREE_H
 
-#include <stdio.h>
+#include <limits.h>
 #include <stdlib.h>
-#include "queue.h"
-#include <math.h>
-#include <string.h>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
+#include "header.h"
 
-typedef struct NODE_TREE {
-    int data;
-    struct NODE_TREE* left;
-    struct NODE_TREE* right;
-} NODE_TREE;
+struct Leaf {
+    struct Leaf *left;
+    struct Leaf *right;
+    struct Leaf *parent;
+    int value;
+};
 
-void input_tree(QUEUE *queue);
-int find_and_remove_min(QUEUE *queue);
-NODE_TREE *create_node_tree(int value);
-NODE_TREE *insert_node_tree(NODE_TREE *tree, int value);
-void create_tree(NODE_TREE **tree, QUEUE *queue);
-void delete_tree(NODE_TREE *tree);
-int tree_height(NODE_TREE* node);
-void fill_output(char** output, NODE_TREE* node, int level, int left, int right);
-void print_tree(NODE_TREE* root) ;
+struct Tree {
+    struct Leaf *root;
+    int size;
+};
+
+int init_tree(struct Tree *tree);
+struct Leaf *create_leaf(int value, struct Leaf *parent);
+int Insert(struct Tree *tree, int value);
+void print_tree(struct Leaf* node, int level);
+void visualize_tree(struct Tree *tree);
+int input_tree(struct Tree *tree);
+void print_tree_with_highlight(struct Leaf *node, const char *prefix, int is_left, struct Leaf *highlight);
+struct Leaf *navigate_tree(struct Leaf *root);
+void RecDel(struct Leaf *node);
+int delete_leaf(struct Tree *tree);
 
 #endif

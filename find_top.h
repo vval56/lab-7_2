@@ -2,13 +2,16 @@
 #define FIND_TOP_H
 
 #include "binary_tree.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-typedef struct LEVEL_INFO{
-    int leaves;
-    int internal_nodes;
-}LEVEL_INFO;
+typedef struct {
+    int internal_nodes; 
+    int leaves;         
+} LevelStats;
 
-void count_nodes_on_level(NODE_TREE* node, int level, LEVEL_INFO* counts);
-void count_by_levels(NODE_TREE* root);
+int tree_height(struct Leaf *node);
+void count_nodes_on_level(struct Leaf *node, int current_level, int target_level, LevelStats *stats);
+void print_level_stats(struct Tree *tree);
 
 #endif
